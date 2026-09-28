@@ -1,0 +1,157 @@
+<%- include('../partials/header') %>
+
+<div class="space-y-6">
+
+  <!-- Header Section -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-xl font-bold text-slate-900">Katalog & Inventaris Alat Praktikum</h1>
+        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700">Lab RPL & Elektronika</span>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">Daftar peralatan praktikum jaringan, IoT, mikrokontroler, perkakas solder, dan proyektor</p>
+    </div>
+
+    <% if (currentUser.role === 'ADMIN') { %>
+      <a href="/tools/new" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors">
+        <i class="fa-solid fa-plus"></i>
+        <span>Tambah Alat Baru</span>
+      </a>
+    <% } else if (currentUser.role === 'PEMINJAM') { %>
+      <a href="/borrowings/new" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>Ajukan Pinjam Alat</span>
+      </a>
+    <% } %>
+  </div>
+
+  <!-- Filters & Search Bar -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+    <form action="/tools" method="GET" class="flex flex-col sm:flex-row items-center gap-3">
+      <!-- Search -->
+      <div class="relative flex-1 w-full">
+        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+        </span>
+        <input type="text" name="q" value="<%= filters.q %>" placeholder="Cari nama alat praktikum atau spesifikasi teknis..." class="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+      </div>
+
+      <!-- Category Filter -->
+      <div class="w-full sm:w-48">
+        <select name="categoryId" class="w-full py-2 px-3 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Semua Kategori</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat.id %>" <%= filters.categoryId == cat.id ? 'selected' : '' %>><%= cat.namaKategori %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Condition Filter -->
+      <div class="w-full sm:w-36">
+        <select name="kondisi" class="w-full py-2 px-3 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Semua Kondisi</option>
+          <option value="BAIK" <%= filters.kondisi === 'BAIK' ? 'selected' : '' %>>BAIK</option>
+          <option value="RUSAK" <%= filters.kondisi === 'RUSAK' ? 'selected' : '' %>>RUSAK</option>
+        </select>
+      </div>
+
+      <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors">
+        Filter
+      </button>
+
+      <% if (filters.q || filters.categoryId || filters.kondisi) { %>
+        <a href="/tools" class="w-full sm:w-auto px-3 py-2 text-center text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+          Reset
+        </a>
+      <% } %>
+    </form>
+  </div>
+
+  <!-- Tools Grid / Cards View -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <% if (tools && tools.length > 0) { %>
+      <% tools.forEach(tool => { %>
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between group">
+          <div>
+            <!-- Top Badges -->
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                <%= tool.category.namaKategori %>
+              </span>
+              
+              <!-- Condition Badge -->
+              <% if (tool.kondisi === 'BAIK') { %>
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> BAIK
+                </span>
+              <% } else { %>
+                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> RUSAK
+                </span>
+              <% } %>
+            </div>
+
+            <!-- Tool Name & Spec -->
+            <h3 class="text-base font-bold text-slate-900 mt-3 group-hover:text-blue-600 transition-colors">
+              <%= tool.namaAlat %>
+            </h3>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-3">
+              <%= tool.spesifikasi || 'Peralatan standar praktikum lab komputer.' %>
+            </p>
+          </div>
+
+          <!-- Bottom Section: Stock & Action -->
+          <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+            <div>
+              <span class="text-[10px] text-slate-400 font-semibold block uppercase">Ketersediaan Stok</span>
+              <% if (tool.stok > 3) { %>
+                <span class="text-sm font-extrabold text-emerald-600"><%= tool.stok %> Unit</span>
+              <% } else if (tool.stok > 0) { %>
+                <span class="text-sm font-extrabold text-amber-600"><%= tool.stok %> Unit (Sisa Sedikit)</span>
+              <% } else { %>
+                <span class="text-sm font-extrabold text-rose-600">Habis Dipinjam</span>
+              <% } %>
+            </div>
+
+            <!-- Role-Specific Action Buttons -->
+            <div class="flex items-center gap-1.5">
+              <% if (currentUser.role === 'ADMIN') { %>
+                <a href="/tools/<%= tool.id %>/edit" class="p-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit Alat">
+                  <i class="fa-solid fa-pen-to-square text-xs"></i>
+                </a>
+                <form action="/tools/<%= tool.id %>/delete" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus inventaris alat <%= tool.namaAlat %>?')">
+                  <button type="submit" class="p-2 text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus Alat">
+                    <i class="fa-solid fa-trash-can text-xs"></i>
+                  </button>
+                </form>
+              <% } %>
+
+              <% if (currentUser.role === 'PEMINJAM') { %>
+                <% if (tool.stok > 0 && tool.kondisi === 'BAIK') { %>
+                  <a href="/borrowings/new?toolId=<%= tool.id %>" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+                    <i class="fa-solid fa-hand-holding"></i> Pinjam
+                  </a>
+                <% } else { %>
+                  <button disabled class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 text-slate-400 rounded-lg text-xs font-medium cursor-not-allowed">
+                    Tidak Tersedia
+                  </button>
+                <% } %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    <% } else { %>
+      <div class="col-span-full bg-white border border-slate-200 rounded-2xl p-12 text-center">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-xl">
+          <i class="fa-solid fa-box-open"></i>
+        </div>
+        <h3 class="text-sm font-bold text-slate-800">Tidak ada alat yang ditemukan</h3>
+        <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian atau filter kategori</p>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : 'Login - Sarpras Lab RPL & Elektronika' %></title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="h-full flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 font-sans bg-slate-50 text-slate-800">
+
+  <div class="max-w-md w-full space-y-6">
+    
+    <!-- Header Brand & Title -->
+    <div class="text-center">
+      <div class="inline-flex w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-sky-500 text-white items-center justify-center shadow-lg shadow-blue-500/25 mb-4">
+        <i class="fa-solid fa-microchip text-3xl"></i>
+      </div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">SARPRAS LAB RPL & ELEKTRONIKA</h1>
+      <p class="text-sm text-slate-500 mt-1">Sistem Sirkulasi & Inventaris Praktikum • SMK Telkom</p>
+      <span class="inline-block mt-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+        Standard UKK & Industri • 3 Level RBAC
+      </span>
+    </div>
+
+    <!-- Card Login Container -->
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl shadow-slate-200/50">
+
+      <!-- Alerts -->
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="mb-5 flex items-center gap-3 p-3.5 text-xs text-rose-800 bg-rose-50 border border-rose-200 rounded-xl">
+          <i class="fa-solid fa-circle-exclamation text-rose-600 text-sm"></i>
+          <span class="font-medium"><%= error %></span>
+        </div>
+      <% } %>
+
+      <% if (typeof success !== 'undefined' && success) { %>
+        <div class="mb-5 flex items-center gap-3 p-3.5 text-xs text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+          <span class="font-medium"><%= success %></span>
+        </div>
+      <% } %>
+
+      <!-- Form Login -->
+      <form id="login-form" action="/auth/login" method="POST" class="space-y-4">
+        <div>
+          <label for="username" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Username Pengguna</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-user text-sm"></i>
+            </span>
+            <input type="text" id="username" name="username" required placeholder="Masukkan username" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          </div>
+        </div>
+
+        <div>
+          <label for="password" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">Kata Sandi (Password)</label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-lock text-sm"></i>
+            </span>
+            <input type="password" id="password" name="password" required placeholder="Masukkan kata sandi" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold rounded-xl shadow-md shadow-blue-500/20 transition-all hover:shadow-lg flex items-center justify-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span>Masuk ke Dashboard</span>
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-slate-200"></div>
+        </div>
+        <div class="relative flex justify-center text-xs uppercase">
+          <span class="bg-white px-3 text-slate-400 font-semibold tracking-wider">Akses Cepat Akun Demo (1-Klik)</span>
+        </div>
+      </div>
+
+      <!-- Quick Switch Demo Login Buttons -->
+      <div class="grid grid-cols-1 gap-2.5">
+        <!-- 1. Admin Demo -->
+        <button type="button" onclick="quickLogin('admin', 'password123')" class="w-full flex items-center justify-between p-3 rounded-xl border border-purple-200 bg-purple-50/70 hover:bg-purple-100/70 transition-all text-left group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+              <i class="fa-solid fa-user-shield"></i>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-purple-950 group-hover:text-purple-700">1. Admin (Kepala Lab / IT)</p>
+              <p class="text-[11px] text-purple-700">User: <code class="font-mono">admin</code> | Pass: <code class="font-mono">password123</code></p>
+            </div>
+          </div>
+          <span class="text-xs font-semibold text-purple-700 bg-purple-200/60 px-2 py-1 rounded-md group-hover:bg-purple-600 group-hover:text-white transition-colors">
+            Login <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+          </span>
+        </button>
+
+        <!-- 2. Toolman Demo -->
+        <button type="button" onclick="quickLogin('toolman', 'password123')" class="w-full flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50/70 hover:bg-amber-100/70 transition-all text-left group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-amber-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+              <i class="fa-solid fa-screwdriver-wrench"></i>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-amber-950 group-hover:text-amber-700">2. Toolman (Laboran Lab)</p>
+              <p class="text-[11px] text-amber-700">User: <code class="font-mono">toolman</code> | Pass: <code class="font-mono">password123</code></p>
+            </div>
+          </div>
+          <span class="text-xs font-semibold text-amber-700 bg-amber-200/60 px-2 py-1 rounded-md group-hover:bg-amber-600 group-hover:text-white transition-colors">
+            Login <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+          </span>
+        </button>
+
+        <!-- 3. Peminjam (Siswa) Demo -->
+        <button type="button" onclick="quickLogin('peminjam', 'password123')" class="w-full flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 transition-all text-left group">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-sm">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-emerald-950 group-hover:text-emerald-700">3. Peminjam (Siswa XII RPL 1)</p>
+              <p class="text-[11px] text-emerald-700">User: <code class="font-mono">peminjam</code> | Pass: <code class="font-mono">password123</code></p>
+            </div>
+          </div>
+          <span class="text-xs font-semibold text-emerald-700 bg-emerald-200/60 px-2 py-1 rounded-md group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+            Login <i class="fa-solid fa-arrow-right text-[10px] ml-1"></i>
+          </span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Security Footnote -->
+    <p class="text-center text-xs text-slate-400">
+      Dilengkapi Session-Auth & RBAC Middleware • SMK Telkom Lampung
+    </p>
+
+  </div>
+
+  <!-- Script for 1-Click Fast Login -->
+  <script>
+    function quickLogin(username, password) {
+      document.getElementById('username').value = username;
+      document.getElementById('password').value = password;
+      document.getElementById('login-form').submit();
+    }
+  </script>
+
+</body>
+</html>

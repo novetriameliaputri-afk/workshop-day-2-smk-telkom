@@ -1,0 +1,76 @@
+<%- include('../partials/header') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900"><%= isEdit ? 'Edit Alat Praktikum' : 'Tambah Inventaris Alat Baru' %></h1>
+      <p class="text-xs text-slate-500 mt-1"><%= isEdit ? 'Perbarui informasi spesifikasi dan stok alat lab' : 'Daftarkan alat laboratorium RPL & Elektronika baru' %></p>
+    </div>
+    <a href="/tools" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+      <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+    </a>
+  </div>
+
+  <!-- Form Card -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+    <form action="<%= isEdit ? '/tools/' + tool.id : '/tools' %>" method="POST" class="space-y-5">
+      
+      <!-- Nama Alat -->
+      <div>
+        <label for="namaAlat" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Alat Praktikum *</label>
+        <input type="text" id="namaAlat" name="namaAlat" value="<%= tool ? tool.namaAlat : '' %>" required placeholder="Contoh: Router Mikrotik RB750Gr3 (hEX)" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+      </div>
+
+      <!-- Kategori Alat -->
+      <div>
+        <label for="categoryId" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kategori Alat *</label>
+        <select id="categoryId" name="categoryId" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          <option value="">-- Pilih Kategori --</option>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat.id %>" <%= tool && tool.categoryId === cat.id ? 'selected' : '' %>><%= cat.namaKategori %></option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Spesifikasi Teknis -->
+      <div>
+        <label for="spesifikasi" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Spesifikasi Teknis & Keterangan</label>
+        <textarea id="spesifikasi" name="spesifikasi" rows="3" placeholder="Contoh: Gigabit 5-Port Ethernet, RouterOS Level 4, adaptor 24V original..." class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"><%= tool ? tool.spesifikasi : '' %></textarea>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Stok Unit -->
+        <div>
+          <label for="stok" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jumlah Stok Tersedia *</label>
+          <input type="number" id="stok" name="stok" min="0" value="<%= tool ? tool.stok : 5 %>" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+
+        <!-- Kondisi Fisik -->
+        <div>
+          <label for="kondisi" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kondisi Fisik Alat *</label>
+          <select id="kondisi" name="kondisi" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+            <option value="BAIK" <%= tool && tool.kondisi === 'BAIK' ? 'selected' : '' %>>BAIK (Siap Pakai Praktikum)</option>
+            <option value="RUSAK" <%= tool && tool.kondisi === 'RUSAK' ? 'selected' : '' %>>RUSAK (Perlu Perbaikan / Rusak)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <a href="/tools" class="px-5 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+          Batal
+        </a>
+        <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-floppy-disk"></i>
+          <span><%= isEdit ? 'Simpan Perubahan' : 'Tambahkan Alat' %></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

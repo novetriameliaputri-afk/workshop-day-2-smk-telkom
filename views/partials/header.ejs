@@ -1,55 +1,157 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="h-full bg-slate-50">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><%= typeof title !== 'undefined' ? title : 'SEWA AJA — Persewaan Busana SMK Telkom' %></title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👘</text></svg>">
+  <title><%= typeof title !== 'undefined' ? title : 'Sistem Peminjaman Sarpras Lab RPL & Elektronika' %></title>
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Tailwind CSS CDN with configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background-color: white !important;
+        font-size: 11pt !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .page-break {
+        page-break-after: always;
+      }
+    }
+    .print-only {
+      display: none;
+    }
+  </style>
 </head>
-<body>
+<body class="h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-brand-500 selection:text-white">
 
-  <!-- Navigation Bar -->
-  <nav class="navbar">
-    <div class="container nav-container">
-      <a href="/" class="brand-logo">
-        <div class="brand-icon">👘</div>
-        <div class="brand-text">
-          <h1>SEWA AJA</h1>
-          <span>Manajemen Busana • SMK Telkom Lampung</span>
+  <!-- Top Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Logo Brand & Mobile Toggle -->
+        <div class="flex items-center gap-3">
+          <button type="button" id="mobile-menu-btn" class="md:hidden text-slate-600 hover:text-slate-900 p-2 rounded-lg hover:bg-slate-100">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+          
+          <a href="/" class="flex items-center gap-3 group">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
+              <i class="fa-solid fa-microchip text-lg"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-slate-900 text-base tracking-tight leading-none">SARPRAS LAB</span>
+                <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">RPL & ELKA</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5 leading-none">SMK Telkom • Sirkulasi Alat Praktikum</p>
+            </div>
+          </a>
         </div>
-      </a>
 
-      <ul class="nav-links">
-        <li>
-          <a href="/" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
-            📊 Dashboard
-          </a>
-        </li>
-        <li>
-          <a href="/items" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'items' ? 'active' : '' %>">
-            👗 Cek Barang (Katalog)
-          </a>
-        </li>
-        <li>
-          <a href="/rentals" class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'rentals' ? 'active' : '' %>">
-            📋 Cek Sewaan
-          </a>
-        </li>
-        <li>
-          <a href="/rentals/new" class="nav-link nav-cta">
-            ➕ Transaksi Sewa Baru
-          </a>
-        </li>
-      </ul>
+        <!-- User Information & Quick Action -->
+        <div class="flex items-center gap-3">
+          <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+            <!-- User Pill -->
+            <div class="hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200">
+              <div class="w-7 h-7 rounded-full bg-gradient-to-tr <%= currentUser.role === 'ADMIN' ? 'from-purple-600 to-indigo-600' : (currentUser.role === 'TOOLMAN' ? 'from-amber-500 to-orange-500' : 'from-emerald-500 to-teal-500') %> text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                <%= currentUser.nama ? currentUser.nama.charAt(0).toUpperCase() : 'U' %>
+              </div>
+              <div class="text-left text-xs">
+                <p class="font-semibold text-slate-800 leading-tight"><%= currentUser.nama %></p>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <% if (currentUser.role === 'ADMIN') { %>
+                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-purple-100 text-purple-700">ADMIN LAB</span>
+                  <% } else if (currentUser.role === 'TOOLMAN') { %>
+                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-700">TOOLMAN & LABORAN</span>
+                  <% } else { %>
+                    <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700">PEMINJAM <%= currentUser.nisn ? '(NISN: ' + currentUser.nisn + ')' : '' %></span>
+                  <% } %>
+                </div>
+              </div>
+            </div>
 
-      <div class="nav-status">
-        <span class="status-dot"></span>
-        <span>EJS + SQLite (Aktif)</span>
+            <!-- Logout Button -->
+            <a href="/auth/logout" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-white hover:bg-rose-600 bg-rose-50 border border-rose-200 rounded-lg transition-colors" title="Keluar dari sistem">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i>
+              <span class="hidden md:inline">Keluar</span>
+            </a>
+          <% } else { %>
+            <a href="/auth/login" class="inline-flex items-center gap-2 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm transition-colors">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Masuk Sistem</span>
+            </a>
+          <% } %>
+        </div>
+
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- Main Content Wrapper -->
-  <main class="main-content">
-    <div class="container">
+  <!-- Main Container Layout: Sidebar + Main Content -->
+  <div class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-6">
+    
+    <% if (typeof currentUser !== 'undefined' && currentUser) { %>
+      <!-- Include Dynamic Role-based Sidebar -->
+      <%- include('sidebar') %>
+    <% } %>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 min-w-0">
+
+      <!-- Flash Messages / Notification Banners -->
+      <% if (typeof successMsg !== 'undefined' && successMsg) { %>
+        <div class="mb-5 flex items-center gap-3 p-4 text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl shadow-sm transition-all animate-fade-in no-print">
+          <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+          <div class="flex-1 font-medium"><%= successMsg %></div>
+          <button onclick="this.parentElement.remove()" class="text-emerald-500 hover:text-emerald-800"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      <% } %>
+
+      <% if (typeof errorMsg !== 'undefined' && errorMsg) { %>
+        <div class="mb-5 flex items-center gap-3 p-4 text-sm text-rose-800 bg-rose-50 border border-rose-200 rounded-xl shadow-sm transition-all animate-fade-in no-print">
+          <i class="fa-solid fa-circle-exclamation text-rose-600 text-base"></i>
+          <div class="flex-1 font-medium"><%= errorMsg %></div>
+          <button onclick="this.parentElement.remove()" class="text-rose-500 hover:text-rose-800"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      <% } %>

@@ -1,0 +1,220 @@
+<%- include('../partials/header') %>
+
+<div class="space-y-6">
+
+  <!-- Welcome Banner -->
+  <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+    <div class="relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-purple-300 mb-3 border border-white/10">
+        <i class="fa-solid fa-crown text-amber-400"></i>
+        <span>PANEL UTAMA ADMINISTRATOR LAB</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Selamat Datang, <%= currentUser.nama %></h1>
+      <p class="mt-2 text-slate-300 text-sm max-w-2xl">
+        Kelola master data pengguna, inventaris alat praktikum, sirkulasi perizinan, dan pantau rekam jejak aktifitas laboratorium RPL & Elektronika secara terpusat.
+      </p>
+
+      <div class="mt-5 flex flex-wrap gap-2.5">
+        <a href="/tools/new" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-md transition-colors">
+          <i class="fa-solid fa-plus"></i> Tambah Alat Praktikum
+        </a>
+        <a href="/users/new" class="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold shadow-md transition-colors">
+          <i class="fa-solid fa-user-plus"></i> Tambah Pengguna Baru
+        </a>
+        <a href="/reports" class="inline-flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition-colors border border-white/10">
+          <i class="fa-solid fa-file-pdf"></i> Laporan Sirkulasi
+        </a>
+      </div>
+    </div>
+    
+    <!-- Background Watermark Icon -->
+    <i class="fa-solid fa-server absolute -right-6 -bottom-8 text-white/5 text-9xl pointer-events-none"></i>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <!-- Stat 1 -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Inventaris Alat</span>
+        <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-toolbox"></i>
+        </div>
+      </div>
+      <p class="text-3xl font-extrabold text-slate-900 mt-2"><%= stats.totalTools %></p>
+      <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+        <span class="font-medium text-blue-600"><%= stats.totalCategories %> Kategori</span> terdaftar
+      </div>
+    </div>
+
+    <!-- Stat 2 -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pinjaman Aktif</span>
+        <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-arrows-rotate"></i>
+        </div>
+      </div>
+      <p class="text-3xl font-extrabold text-slate-900 mt-2"><%= stats.activeBorrowCount %></p>
+      <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+        <span class="font-medium text-indigo-600"><%= stats.pendingCount %> Permohonan</span> pending
+      </div>
+    </div>
+
+    <!-- Stat 3 -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pengguna Sistem</span>
+        <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-users"></i>
+        </div>
+      </div>
+      <p class="text-3xl font-extrabold text-slate-900 mt-2"><%= stats.totalUsers %></p>
+      <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+        <span>Admin, Toolman & Siswa</span>
+      </div>
+    </div>
+
+    <!-- Stat 4 -->
+    <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Denda Terkumpul</span>
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-hand-holding-dollar"></i>
+        </div>
+      </div>
+      <p class="text-2xl font-extrabold text-emerald-600 mt-2"><%= formatRupiah(stats.totalDenda) %></p>
+      <div class="flex items-center gap-1.5 mt-2 text-xs text-slate-500">
+        <span>Kompensasi alat rusak/terlambat</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Warning Banner: Low Stock Tools Alert -->
+  <% if (lowStockTools && lowStockTools.length > 0) { %>
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 shadow-sm">
+      <div class="flex items-start gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center flex-shrink-0 text-base shadow-sm">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-sm font-bold text-amber-900">Peringatan: Stok Alat Lab Menipis (<= 3 Unit)</h3>
+          <p class="text-xs text-amber-700 mt-0.5">Segera lakukan pengadaan atau pastikan alat praktikum yang dipinjam segera dikembalikan siswa:</p>
+          <div class="mt-2.5 flex flex-wrap gap-2">
+            <% lowStockTools.forEach(tool => { %>
+              <a href="/tools/<%= tool.id %>/edit" class="inline-flex items-center gap-1.5 px-3 py-1 bg-white border border-amber-300 rounded-lg text-xs font-semibold text-amber-900 hover:bg-amber-100 transition-colors shadow-2xs">
+                <span><%= tool.namaAlat %></span>
+                <span class="px-1.5 py-0.2 rounded-full bg-amber-200 text-amber-950 font-bold"><%= tool.stok %> Unit</span>
+              </a>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Two Column Layout: Recent Circulations & Audit Logs -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+    <!-- Column 1 & 2: Recent Transactions -->
+    <div class="lg:col-span-2 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-slate-800 text-base">Sirkulasi Peminjaman Terbaru</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Transaksi peminjaman dan pengembalian sarpras</p>
+        </div>
+        <a href="/borrowings" class="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+          Lihat Semua <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+      </div>
+
+      <div class="overflow-x-auto flex-1">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+              <th class="py-3 px-4">Peminjam</th>
+              <th class="py-3 px-4">Alat Praktikum</th>
+              <th class="py-3 px-4">Jumlah</th>
+              <th class="py-3 px-4">Tgl Kembali</th>
+              <th class="py-3 px-4">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            <% if (recentBorrowings && recentBorrowings.length > 0) { %>
+              <% recentBorrowings.forEach(item => { %>
+                <tr class="hover:bg-slate-50/80 transition-colors">
+                  <td class="py-3 px-4">
+                    <p class="font-semibold text-slate-800"><%= item.user.nama %></p>
+                    <p class="text-[11px] text-slate-400"><%= item.user.nisn ? 'NISN: ' + item.user.nisn : item.user.role %></p>
+                  </td>
+                  <td class="py-3 px-4">
+                    <p class="font-medium text-slate-800"><%= item.tool.namaAlat %></p>
+                    <span class="text-[10px] text-slate-400"><%= item.tool.category.namaKategori %></span>
+                  </td>
+                  <td class="py-3 px-4 font-bold text-slate-700"><%= item.jumlah %> Unit</td>
+                  <td class="py-3 px-4 text-slate-600"><%= formatDate(item.tglKembaliRencana) %></td>
+                  <td class="py-3 px-4">
+                    <% if (item.status === 'PENDING') { %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">Menunggu</span>
+                    <% } else if (item.status === 'APPROVED') { %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">Dipinjam</span>
+                    <% } else if (item.status === 'RETURNED') { %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">Kembali</span>
+                    <% } else { %>
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">Ditolak</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="5" class="py-8 text-center text-slate-400">Belum ada riwayat transaksi peminjaman.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Column 3: Recent Activity Logs -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm flex flex-col">
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+        <div>
+          <h2 class="font-bold text-slate-800 text-base">Audit Log Lab</h2>
+          <p class="text-xs text-slate-400 mt-0.5">Rekam jejak aktifitas sistem</p>
+        </div>
+        <a href="/activity-logs" class="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline">
+          Semua <i class="fa-solid fa-arrow-right text-[10px]"></i>
+        </a>
+      </div>
+
+      <div class="p-4 space-y-3.5 overflow-y-auto max-h-[380px]">
+        <% if (recentLogs && recentLogs.length > 0) { %>
+          <% recentLogs.forEach(log => { %>
+            <div class="flex items-start gap-3 text-xs border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+              <div class="w-7 h-7 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <i class="fa-solid fa-bolt text-xs"></i>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="font-bold text-slate-800 truncate"><%= log.user ? log.user.nama : 'System' %></span>
+                  <span class="text-[10px] text-slate-400 whitespace-nowrap"><%= formatDateTime(log.createdAt) %></span>
+                </div>
+                <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-slate-100 text-slate-700">
+                  <%= log.aksi %>
+                </span>
+                <p class="text-slate-600 mt-1 leading-relaxed"><%= log.keterangan %></p>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <p class="text-center text-slate-400 py-6 text-xs">Belum ada rekam jejak aktifitas.</p>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

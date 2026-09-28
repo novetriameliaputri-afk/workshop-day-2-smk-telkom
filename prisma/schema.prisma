@@ -7,68 +7,81 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 1. Model Katalog Busana (Kebaya, Jas Formal, Gaun, Beskap, Aksesoris)
-model Item {
-  id          Int          @id @default(autoincrement())
-  code        String       @unique // Contoh: KBY-01, JAS-01
-  name        String       // Contoh: Kebaya Brokat Maroon Modern
-  category    String       // Kebaya, Jas Formal, Gaun Pengantin, Beskap Adat, Aksesoris
-  size        String       @default("All Size") // S, M, L, XL, All Size
-  rentalPrice Int          // Harga sewa per hari (Rp)
-  stock       Int          @default(1)
-  status      String       @default("AVAILABLE") // AVAILABLE, RENTED, LAUNDRY, MAINTENANCE
-  description String?      // Keterangan bahan, warna, kelengkapan
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  rentalItems RentalItem[]
+// 1. Model User (Data pengguna lab dengan 3 role: ADMIN, TOOLMAN, PEMINJAM)
+model User {
+  id                Int           @id @default(autoincrement())
+  username          String        @unique
+  password          String
+  nama              String
+  role              String        // ADMIN, TOOLMAN, PEMINJAM
+  nisn              String?       // NISN untuk Siswa atau NIP untuk Guru/Staff
+  telepon           String?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  // Relasi
+  borrowings        Borrowing[]   @relation("BorrowerUser")
+  handledBorrowings Borrowing[]   @relation("ToolmanUser")
+  activityLogs      ActivityLog[]
 }
 
-// 2. Model Data Pelanggan / Penyewa
-model Customer {
-  id           Int                 @id @default(autoincrement())
-  name         String
-  phone        String
-  address      String?
-  idCardNumber String?             // Nomor KTP / SIM Jaminan
-  createdAt    DateTime            @default(now())
-  rentals      RentalTransaction[]
+// 2. Model Category (Kategori alat lab: Jaringan, Elektronika, Proyektor, Perkakas Lab)
+model Category {
+  id           Int      @id @default(autoincrement())
+  namaKategori String   @unique // Contoh: Jaringan, Elektronika, Proyektor
+  createdAt    DateTime @default(now())
+
+  // Relasi
+  tools        Tool[]
 }
 
-// 3. Model Transaksi Persewaan Busana
-model RentalTransaction {
-  id                Int          @id @default(autoincrement())
-  transactionCode   String       @unique // Contoh: SE-82383
-  customerId        Int
-  customer          Customer     @relation(fields: [customerId], references: [id])
-  cashierName       String       @default("Seli (Kasir)")
-  pickupDate        DateTime     // Tanggal Ambil (H-1)
-  eventDate         DateTime     // Hari H (Tanggal Pakai)
-  returnDate        DateTime     // Tanggal Pulang / Kembali (H+1)
-  actualReturnDate  DateTime?    // Tanggal pengembalian riil oleh pelanggan
-  totalBasePrice    Int          // Total tarif sewa busana
-  additionalCharge  Int          @default(0) // Biaya charge / aksesoris tambahan
-  discount          Int          @default(0) // Diskon promo (Rp)
-  finalPrice        Int          // Total tagihan akhir
-  paidAmount        Int          // Nominal dibayar (DP minimal Rp 50.000 atau Lunas)
-  remainingAmount   Int          // Sisa tagihan / kekurangan (Rp)
-  paymentType       String       @default("DP") // DP, LUNAS
-  paymentMethod     String       @default("TUNAI") // TUNAI, TRANSFER, QRIS
-  rentalStatus      String       @default("BOOKING") // BOOKING, DIAMBIL, SELESAI, BATAL, TERLAMBAT
-  customerGuarantee String       @default("E-KTP") // E-KTP, SIM, KTP Pelajar
-  fittingNotes      String?      // Catatan vermak/ukuran: "Jas dikecilin 3 cm di pinggang..."
-  penaltyFee        Int          @default(0) // Denda keterlambatan jika lewat returnDate
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  rentalItems       RentalItem[]
+// 3. Model Tool (Inventaris sarana alat lab praktikum)
+model Tool {
+  id          Int         @id @default(autoincrement())
+  namaAlat    String
+  spesifikasi String?
+  stok        Int         @default(0)
+  kondisi     String      @default("BAIK") // BAIK / RUSAK
+  categoryId  Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relasi
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  borrowings  Borrowing[]
 }
 
-// 4. Model Rincian Busana dalam Transaksi (Pivot Relation)
-model RentalItem {
-  id                  Int               @id @default(autoincrement())
-  rentalTransactionId Int
-  rentalTransaction   RentalTransaction @relation(fields: [rentalTransactionId], references: [id], onDelete: Cascade)
-  itemId              Int
-  item                Item              @relation(fields: [itemId], references: [id])
-  priceAtRent         Int               // Harga sewa pada saat transaksi dibuat
-  itemCustomNote      String?           // Catatan khusus item ini
+// 4. Model Borrowing (Transaksi peminjaman alat praktikum)
+model Borrowing {
+  id                Int       @id @default(autoincrement())
+  userId            Int
+  toolId            Int
+  jumlah            Int       @default(1)
+  tglPinjam         DateTime  @default(now())
+  tglKembaliRencana DateTime
+  tglKembaliReal    DateTime?
+  status            String    @default("PENDING") // PENDING, APPROVED, REJECTED, RETURNED
+  kondisiKembali    String?   // BAIK, RUSAK, HILANG
+  denda             Int       @default(0)
+  toolmanId         Int?
+  catatan           String?   // Keperluan praktikum / catatan inspeksi fisik
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relasi
+  user              User      @relation("BorrowerUser", fields: [userId], references: [id], onDelete: Cascade)
+  tool              Tool      @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolman           User?     @relation("ToolmanUser", fields: [toolmanId], references: [id])
+}
+
+// 5. Model ActivityLog (Rekam jejak sirkulasi sarpras laboratorium)
+model ActivityLog {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  aksi       String   // LOGIN, LOGOUT, TAMBAH_ALAT, UPDATE_ALAT, AJUKAN_PINJAM, APPROVAL_PINJAM, TOLAK_PINJAM, PENGEMBALIAN_ALAT, etc.
+  keterangan String
+  createdAt  DateTime @default(now())
+
+  // Relasi
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

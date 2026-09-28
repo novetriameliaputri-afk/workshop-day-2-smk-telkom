@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' ? title : '404 - Halaman Tidak Ditemukan' %></title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="h-full flex items-center justify-center p-4 font-sans text-slate-800">
+
+  <div class="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-8 text-center shadow-xl shadow-slate-200/50">
+    <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-3xl mb-4 border border-blue-100">
+      <i class="fa-solid fa-compass"></i>
+    </div>
+
+    <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">404</h1>
+    <p class="text-sm font-bold text-slate-800 mt-1">Halaman Tidak Ditemukan</p>
+    <p class="text-xs text-slate-500 mt-2">
+      Alamat URL yang Anda tuju mungkin salah ketik atau telah dipindahkan ke menu lain di sistem lab.
+    </p>
+
+    <div class="mt-6">
+      <a href="/" class="inline-flex items-center gap-2 py-2.5 px-6 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition-colors shadow-sm">
+        <i class="fa-solid fa-arrow-left"></i> Kembali ke Dashboard
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

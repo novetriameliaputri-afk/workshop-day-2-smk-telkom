@@ -1,0 +1,128 @@
+<%- include('../partials/header') %>
+
+<div class="max-w-2xl mx-auto space-y-6">
+
+  <!-- Header -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex items-center justify-between">
+    <div>
+      <h1 class="text-xl font-bold text-slate-900">Form Pengajuan Peminjaman Alat</h1>
+      <p class="text-xs text-slate-500 mt-1">Ajukan peminjaman peralatan laboratorium untuk kegiatan praktikum siswa/guru</p>
+    </div>
+    <a href="/borrowings" class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+      <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+    </a>
+  </div>
+
+  <!-- Form Card -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+    <form action="/borrowings" method="POST" class="space-y-5">
+
+      <!-- If ADMIN: Select Target User -->
+      <% if (currentUser.role === 'ADMIN' && typeof usersList !== 'undefined' && usersList.length > 0) { %>
+        <div>
+          <label for="targetUserId" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Peminjam (Siswa / Guru) *</label>
+          <select id="targetUserId" name="targetUserId" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+            <% usersList.forEach(u => { %>
+              <option value="<%= u.id %>"><%= u.nama %> (<%= u.nisn ? 'NISN: ' + u.nisn : u.role %>)</option>
+            <% }) %>
+          </select>
+        </div>
+      <% } %>
+
+      <!-- Pilih Alat Praktikum -->
+      <div>
+        <label for="toolId" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Pilih Alat Praktikum *</label>
+        <select id="toolId" name="toolId" required onchange="updateStockInfo()" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+          <option value="">-- Pilih Alat yang Tersedia --</option>
+          <% tools.forEach(t => { %>
+            <option value="<%= t.id %>" data-stock="<%= t.stok %>" data-name="<%= t.namaAlat %>" <%= selectedToolId === t.id ? 'selected' : '' %>>
+              <%= t.namaAlat %> (Stok Tersedia: <%= t.stok %> unit) — [<%= t.category.namaKategori %>]
+            </option>
+          <% }) %>
+        </select>
+      </div>
+
+      <!-- Live Stock Alert Box -->
+      <div id="stock-alert-box" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i class="fa-solid fa-circle-info text-blue-600"></i>
+          <span id="stock-info-text">Silakan pilih alat di atas untuk melihat kuota ketersediaan.</span>
+        </div>
+        <span id="stock-badge" class="font-extrabold px-2 py-0.5 rounded bg-blue-200/60 text-blue-950 hidden"></span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Jumlah Unit -->
+        <div>
+          <label for="jumlah" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jumlah Unit Pinjam *</label>
+          <input type="number" id="jumlah" name="jumlah" min="1" value="1" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+
+        <!-- Rencana Pengembalian -->
+        <div>
+          <label for="tglKembaliRencana" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Batas Tgl Rencana Kembali *</label>
+          <% 
+            const defaultReturn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          %>
+          <input type="date" id="tglKembaliRencana" name="tglKembaliRencana" value="<%= defaultReturn %>" required class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+        </div>
+      </div>
+
+      <!-- Catatan / Keperluan Praktikum -->
+      <div>
+        <label for="catatan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Keperluan / Keterangan Praktikum *</label>
+        <textarea id="catatan" name="catatan" rows="3" required placeholder="Contoh: Praktikum konfigurasi Mikrotik VLAN & Routing Statis di Lab Komputer 2 bersama Pak Hendra..." class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"></textarea>
+      </div>
+
+      <!-- Informasi Ketentuan -->
+      <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 space-y-1">
+        <p class="font-bold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Ketentuan Peminjaman Sarpras Lab:
+        </p>
+        <p>1. Alat praktikum wajib diperiksa fisiknya sebelum dan sesudah digunakan.</p>
+        <p>2. Kerusakan atau kehilangan akibat kelalaian siswa akan dikenakan denda/ganti rugi perbaikan.</p>
+        <p>3. Permohonan pinjaman akan aktif setelah disetujui oleh Toolman atau Kepala Lab.</p>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <a href="/borrowings" class="px-5 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+          Batal
+        </a>
+        <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all flex items-center gap-2">
+          <i class="fa-solid fa-paper-plane"></i>
+          <span>Kirim Permohonan Pinjam</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+
+<script>
+  function updateStockInfo() {
+    const select = document.getElementById('toolId');
+    const selectedOption = select.options[select.selectedIndex];
+    const stockInfoText = document.getElementById('stock-info-text');
+    const stockBadge = document.getElementById('stock-badge');
+    const qtyInput = document.getElementById('jumlah');
+
+    if (selectedOption && selectedOption.value) {
+      const stock = parseInt(selectedOption.getAttribute('data-stock'), 10) || 0;
+      const name = selectedOption.getAttribute('data-name');
+      stockInfoText.textContent = `Alat "${name}" memiliki sisa stok ${stock} unit di laboratorium.`;
+      stockBadge.textContent = `Stok: ${stock}`;
+      stockBadge.classList.remove('hidden');
+      qtyInput.max = stock;
+    } else {
+      stockInfoText.textContent = 'Silakan pilih alat di atas untuk melihat kuota ketersediaan.';
+      stockBadge.classList.add('hidden');
+    }
+  }
+
+  // Trigger on page load
+  document.addEventListener('DOMContentLoaded', updateStockInfo);
+</script>
+
+<%- include('../partials/footer') %>

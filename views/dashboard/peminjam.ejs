@@ -1,0 +1,182 @@
+<%- include('../partials/header') %>
+
+<div class="space-y-6">
+
+  <!-- Welcome Banner Peminjam (Siswa / Guru) -->
+  <div class="bg-gradient-to-r from-teal-700 via-emerald-600 to-teal-800 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden">
+    <div class="relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold text-white mb-3 border border-white/20">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span>PORTAL SISWA & GURU PEMINJAM SARPRAS</span>
+      </div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Halo, <%= currentUser.nama %>!</h1>
+      <p class="mt-2 text-emerald-100 text-sm max-w-2xl">
+        Gunakan fasilitas peralatan praktikum lab RPL & Elektronika dengan tertib dan bertanggung jawab. Pastikan cek fisik alat sebelum dan sesudah praktikum.
+      </p>
+
+      <div class="mt-5 flex flex-wrap gap-2.5">
+        <a href="/borrowings/new" class="inline-flex items-center gap-2 px-4 py-2 bg-white text-emerald-900 hover:bg-emerald-50 rounded-xl text-xs font-bold shadow-md transition-colors">
+          <i class="fa-solid fa-plus-circle"></i> Ajukan Pinjam Alat Baru
+        </a>
+        <a href="/tools" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-900/60 hover:bg-emerald-900 text-white rounded-xl text-xs font-semibold transition-colors border border-emerald-400/30">
+          <i class="fa-solid fa-boxes-stacked"></i> Lihat Semua Stok Alat Lab
+        </a>
+      </div>
+    </div>
+    
+    <!-- Watermark Icon -->
+    <i class="fa-solid fa-microchip absolute -right-6 -bottom-8 text-white/10 text-9xl pointer-events-none"></i>
+  </div>
+
+  <!-- SECTION 1: Alat Sedang Dipinjam Siswa (Active Loans) -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-blue-50/40">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+          <i class="fa-solid fa-hand-holding"></i>
+        </div>
+        <div>
+          <h2 class="font-bold text-slate-900 text-base">Alat Praktikum yang Sedang Anda Pinjam</h2>
+          <p class="text-xs text-slate-500">Kembalikan ke meja Toolman sebelum batas waktu berakhir</p>
+        </div>
+      </div>
+      <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-900">
+        <%= myActiveBorrowings.length %> Alat Aktif
+      </span>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+            <th class="py-3 px-4">Alat Praktikum</th>
+            <th class="py-3 px-4">Jumlah</th>
+            <th class="py-3 px-4">Tgl Pinjam</th>
+            <th class="py-3 px-4">Batas Pengembalian</th>
+            <th class="py-3 px-4">Keperluan</th>
+            <th class="py-3 px-4 text-center">Pengembalian</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% if (myActiveBorrowings && myActiveBorrowings.length > 0) { %>
+            <% myActiveBorrowings.forEach(item => { %>
+              <% const isOverdue = new Date() > new Date(item.tglKembaliRencana); %>
+              <tr class="hover:bg-slate-50 transition-colors <%= isOverdue ? 'bg-rose-50/40' : '' %>">
+                <td class="py-3 px-4">
+                  <p class="font-bold text-slate-900"><%= item.tool.namaAlat %></p>
+                  <p class="text-[11px] text-slate-400"><%= item.tool.category.namaKategori %></p>
+                </td>
+                <td class="py-3 px-4 font-bold text-blue-700"><%= item.jumlah %> Unit</td>
+                <td class="py-3 px-4 text-slate-600"><%= formatDate(item.tglPinjam) %></td>
+                <td class="py-3 px-4">
+                  <% if (isOverdue) { %>
+                    <span class="inline-flex items-center gap-1 font-bold text-rose-600">
+                      <i class="fa-solid fa-clock-rotate-left"></i> <%= formatDate(item.tglKembaliRencana) %> (Lewat Batas!)
+                    </span>
+                  <% } else { %>
+                    <span class="font-medium text-slate-700"><%= formatDate(item.tglKembaliRencana) %></span>
+                  <% } %>
+                </td>
+                <td class="py-3 px-4 text-slate-600"><%= item.catatan || 'Praktikum' %></td>
+                <td class="py-3 px-4 text-center">
+                  <!-- Tombol Peminjam mengonfirmasi serahkan alat ke meja toolman -->
+                  <form action="/borrowings/<%= item.id %>/return-request" method="POST" onsubmit="return confirm('Apakah fisik alat sudah Anda serahkan ke meja pemeriksaan Toolman lab?')">
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+                      <i class="fa-solid fa-arrow-turn-down-left"></i>
+                      <span>Kembalikan ke Toolman</span>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="6" class="py-8 text-center text-slate-400">
+                <i class="fa-solid fa-circle-check text-2xl text-emerald-500 mb-1 block"></i>
+                Anda tidak memiliki alat praktikum yang sedang dipinjam saat ini.
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION 2: Permohonan Pinjam Menunggu Persetujuan (Pending Requests) -->
+  <% if (myPendingBorrowings && myPendingBorrowings.length > 0) { %>
+    <div class="bg-white border border-amber-200 rounded-2xl shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-amber-100 flex items-center justify-between bg-amber-50/50">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-hourglass-start text-amber-600 text-base"></i>
+          <div>
+            <h2 class="font-bold text-slate-900 text-sm">Permohonan Pinjam Menunggu Persetujuan Toolman</h2>
+            <p class="text-[11px] text-slate-500">Toolman sedang memeriksa ketersediaan stok fisik alat di lab</p>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-amber-100 text-amber-800">
+          <%= myPendingBorrowings.length %> Menunggu
+        </span>
+      </div>
+
+      <div class="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+        <% myPendingBorrowings.forEach(item => { %>
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/60 text-xs space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-800 truncate"><%= item.tool.namaAlat %></span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">PENDING</span>
+            </div>
+            <p class="text-slate-500">Jumlah: <span class="font-semibold text-slate-700"><%= item.jumlah %> Unit</span></p>
+            <p class="text-slate-500">Rencana Kembali: <span class="font-medium text-slate-700"><%= formatDate(item.tglKembaliRencana) %></span></p>
+            <p class="text-slate-400 italic truncate">"<%= item.catatan %>"</p>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- SECTION 3: Katalog Cepat Alat Tersedia -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="font-bold text-slate-900 text-base">Katalog Alat Praktikum Tersedia</h2>
+        <p class="text-xs text-slate-400">Pilih alat praktikum yang ingin Anda pinjam untuk praktikum lab</p>
+      </div>
+      <a href="/tools" class="text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:underline">
+        Lihat Semua Alat <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <% if (availableTools && availableTools.length > 0) { %>
+        <% availableTools.forEach(tool => { %>
+          <div class="p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 hover:shadow-sm transition-all flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                  <%= tool.category.namaKategori %>
+                </span>
+                <span class="text-xs font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  Stok: <%= tool.stok %>
+                </span>
+              </div>
+              <h3 class="font-bold text-slate-800 text-sm mt-2"><%= tool.namaAlat %></h3>
+              <p class="text-xs text-slate-500 mt-1 line-clamp-2"><%= tool.spesifikasi || 'Peralatan praktikum lab standar.' %></p>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="inline-flex items-center gap-1 text-[11px] text-emerald-600 font-medium">
+                <i class="fa-solid fa-circle-check text-[10px]"></i> Kondisi <%= tool.kondisi %>
+              </span>
+              <a href="/borrowings/new?toolId=<%= tool.id %>" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors">
+                <i class="fa-solid fa-plus"></i> Pinjam
+              </a>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,75 +1,165 @@
 const prisma = require('../config/db');
 
-exports.getDashboard = async (req, res) => {
-  try {
-    // 1. Ambil statistik busana
-    const totalItems = await prisma.item.count();
-    const availableItems = await prisma.item.count({ where: { status: 'AVAILABLE' } });
-    const rentedItems = await prisma.item.count({ where: { status: 'RENTED' } });
-    const maintenanceItems = await prisma.item.count({
-      where: { status: { in: ['LAUNDRY', 'MAINTENANCE'] } }
-    });
+const dashboardController = {
+  getDashboard: async (req, res) => {
+    try {
+      const user = req.session.user;
+      const role = user.role;
 
-    // 2. Ambil statistik transaksi sewa
-    const activeRentals = await prisma.rentalTransaction.count({
-      where: { rentalStatus: { in: ['BOOKING', 'DIAMBIL'] } }
-    });
-    const completedRentals = await prisma.rentalTransaction.count({
-      where: { rentalStatus: 'SELESAI' }
-    });
+      if (role === 'ADMIN') {
+        // Data khusus Dashboard ADMIN
+        const [
+          totalUsers,
+          totalTools,
+          totalCategories,
+          totalBorrowings,
+          pendingCount,
+          activeBorrowCount,
+          returnedCount,
+          totalDendaResult,
+          recentLogs,
+          recentBorrowings,
+          lowStockTools
+        ] = await Promise.all([
+          prisma.user.count(),
+          prisma.tool.count(),
+          prisma.category.count(),
+          prisma.borrowing.count(),
+          prisma.borrowing.count({ where: { status: 'PENDING' } }),
+          prisma.borrowing.count({ where: { status: 'APPROVED' } }),
+          prisma.borrowing.count({ where: { status: 'RETURNED' } }),
+          prisma.borrowing.aggregate({
+            _sum: { denda: true }
+          }),
+          prisma.activityLog.findMany({
+            take: 8,
+            orderBy: { createdAt: 'desc' },
+            include: { user: true }
+          }),
+          prisma.borrowing.findMany({
+            take: 6,
+            orderBy: { createdAt: 'desc' },
+            include: {
+              user: true,
+              tool: { include: { category: true } },
+              toolman: true
+            }
+          }),
+          prisma.tool.findMany({
+            where: { stok: { lte: 3 } },
+            include: { category: true }
+          })
+        ]);
 
-    // 3. Hitung omset dan piutang
-    const allRentals = await prisma.rentalTransaction.findMany({
-      select: { paidAmount: true, remainingAmount: true, rentalStatus: true }
-    });
+        return res.render('dashboard/admin', {
+          title: 'Dashboard Administrator Lab RPL & Elektronika',
+          currentPage: 'dashboard',
+          stats: {
+            totalUsers,
+            totalTools,
+            totalCategories,
+            totalBorrowings,
+            pendingCount,
+            activeBorrowCount,
+            returnedCount,
+            totalDenda: totalDendaResult._sum.denda || 0
+          },
+          recentLogs,
+          recentBorrowings,
+          lowStockTools
+        });
+      } else if (role === 'TOOLMAN') {
+        // Data khusus Dashboard TOOLMAN
+        const [
+          pendingApprovals,
+          activeBorrowings,
+          recentReturns,
+          damagedToolsCount,
+          totalToolsCount,
+          totalDendaResult
+        ] = await Promise.all([
+          prisma.borrowing.findMany({
+            where: { status: 'PENDING' },
+            orderBy: { createdAt: 'desc' },
+            include: { user: true, tool: { include: { category: true } } }
+          }),
+          prisma.borrowing.findMany({
+            where: { status: 'APPROVED' },
+            orderBy: { tglKembaliRencana: 'asc' },
+            include: { user: true, tool: { include: { category: true } } }
+          }),
+          prisma.borrowing.findMany({
+            where: { status: 'RETURNED' },
+            take: 5,
+            orderBy: { tglKembaliReal: 'desc' },
+            include: { user: true, tool: true, toolman: true }
+          }),
+          prisma.borrowing.count({
+            where: { kondisiKembali: 'RUSAK' }
+          }),
+          prisma.tool.count(),
+          prisma.borrowing.aggregate({
+            _sum: { denda: true }
+          })
+        ]);
 
-    const totalRevenue = allRentals
-      .filter((r) => r.rentalStatus !== 'BATAL')
-      .reduce((acc, curr) => acc + curr.paidAmount, 0);
+        return res.render('dashboard/toolman', {
+          title: 'Dashboard Toolman & Laboran',
+          currentPage: 'dashboard',
+          pendingApprovals,
+          activeBorrowings,
+          recentReturns,
+          stats: {
+            pendingCount: pendingApprovals.length,
+            activeCount: activeBorrowings.length,
+            damagedCount: damagedToolsCount,
+            totalToolsCount,
+            totalDenda: totalDendaResult._sum.denda || 0
+          }
+        });
+      } else {
+        // Data khusus Dashboard PEMINJAM (Siswa / Guru)
+        const [myActiveBorrowings, myPendingBorrowings, myHistoryBorrowings, availableTools] = await Promise.all([
+          prisma.borrowing.findMany({
+            where: { userId: user.id, status: 'APPROVED' },
+            orderBy: { tglKembaliRencana: 'asc' },
+            include: { tool: { include: { category: true } } }
+          }),
+          prisma.borrowing.findMany({
+            where: { userId: user.id, status: 'PENDING' },
+            orderBy: { createdAt: 'desc' },
+            include: { tool: { include: { category: true } } }
+          }),
+          prisma.borrowing.findMany({
+            where: { userId: user.id, status: { in: ['RETURNED', 'REJECTED'] } },
+            take: 5,
+            orderBy: { updatedAt: 'desc' },
+            include: { tool: true }
+          }),
+          prisma.tool.findMany({
+            where: { stok: { gt: 0 } },
+            take: 6,
+            include: { category: true }
+          })
+        ]);
 
-    const totalReceivable = allRentals
-      .filter((r) => ['BOOKING', 'DIAMBIL'].includes(r.rentalStatus))
-      .reduce((acc, curr) => acc + curr.remainingAmount, 0);
-
-    // 4. Ambil 5 transaksi terbaru
-    const recentRentals = await prisma.rentalTransaction.findMany({
-      take: 5,
-      orderBy: { id: 'desc' },
-      include: {
-        customer: true,
-        rentalItems: {
-          include: { item: true }
-        }
+        return res.render('dashboard/peminjam', {
+          title: 'Portal Peminjaman Siswa / Guru - Lab RPL',
+          currentPage: 'dashboard',
+          myActiveBorrowings,
+          myPendingBorrowings,
+          myHistoryBorrowings,
+          availableTools
+        });
       }
-    });
-
-    // 5. Cek keterlambatan pengembalian
-    const today = new Date();
-    const overdueCount = await prisma.rentalTransaction.count({
-      where: {
-        rentalStatus: 'DIAMBIL',
-        returnDate: { lt: today }
-      }
-    });
-
-    res.render('dashboard', {
-      title: 'Dashboard Operasional — SEWA AJA (SMK Telkom Lampung)',
-      currentPage: 'dashboard',
-      stats: {
-        totalItems,
-        availableItems,
-        rentedItems,
-        maintenanceItems,
-        activeRentals,
-        completedRentals,
-        totalRevenue,
-        totalReceivable,
-        overdueCount
-      },
-      recentRentals
-    });
-  } catch (error) {
-    console.error('Error getDashboard:', error);
-    res.status(500).send('Terjadi kesalahan memuat dashboard: ' + error.message);
+    } catch (error) {
+      console.error('Error saat memuat dashboard:', error);
+      res.status(500).render('partials/header', {
+        title: 'Error 500',
+        currentPage: ''
+      });
+    }
   }
 };
+
+module.exports = dashboardController;

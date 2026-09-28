@@ -1,24 +1,32 @@
-    </div>
-  </main>
+    </main>
+  </div>
 
   <!-- Footer -->
-  <footer class="footer">
-    <div class="container footer-content">
-      <div>
-        <p><strong>SEWA AJA</strong> — Sistem Operasional Persewaan Busana Tradisional, Kebaya & Jas</p>
-        <p style="margin-top: 0.2rem; font-size: 0.8rem;">
-          Workshop Guru Tamu Industri: <em>AI-Driven Code & Culture (PjBL RPL)</em> — <strong>SMK Telkom Lampung $\times$ Lampung Dev (2026)</strong>
-        </p>
+  <footer class="bg-white border-t border-slate-200 py-6 mt-auto text-xs text-slate-500 no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-slate-800">SMK Telkom</span>
+        <span>•</span>
+        <span>Sistem Peminjaman Sarpras Laboratorium RPL & Elektronika</span>
       </div>
-      <div class="footer-links">
-        <a href="/">Dashboard</a>
-        <a href="/items">Katalog Busana</a>
-        <a href="/rentals">Transaksi Sewa</a>
-        <a href="https://codeathome.id/workshop-pjbl-smk-telkom-day-2" target="_blank" rel="noopener">Portal Tugas ↗</a>
+      <div class="flex items-center gap-4">
+        <span>Arsitektur MVC (Node.js + Express + Prisma + SQLite)</span>
+        <span>•</span>
+        <span class="text-blue-600 font-medium">Standar UKK & Industri</span>
       </div>
     </div>
   </footer>
 
-  <script src="/js/main.js"></script>
+  <!-- Script for Mobile Menu Toggle -->
+  <script>
+    const mobileBtn = document.getElementById('mobile-menu-btn');
+    const sidebar = document.getElementById('sidebar-nav');
+    if (mobileBtn && sidebar) {
+      mobileBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('hidden');
+      });
+    }
+  </script>
+
 </body>
 </html>

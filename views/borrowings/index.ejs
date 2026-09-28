@@ -1,0 +1,251 @@
+<%- include('../partials/header') %>
+
+<div class="space-y-6">
+
+  <!-- Header Section -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-xl font-bold text-slate-900">Sirkulasi Peminjaman Alat Praktikum</h1>
+        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-100 text-blue-700">Lab RPL & Elektronika</span>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">
+        <%= currentUser.role === 'PEMINJAM' ? 'Daftar riwayat dan status permohonan peminjaman alat praktikum Anda' : 'Pantau sirkulasi peminjaman, approval toolman, pengembalian fisik, dan denda laboratorium' %>
+      </p>
+    </div>
+
+    <% if (currentUser.role === 'PEMINJAM' || currentUser.role === 'ADMIN') { %>
+      <a href="/borrowings/new" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors">
+        <i class="fa-solid fa-plus-circle"></i>
+        <span>Ajukan Peminjaman Baru</span>
+      </a>
+    <% } %>
+  </div>
+
+  <!-- Filters & Status Tabs -->
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-4">
+    <!-- Status Tabs -->
+    <div class="flex flex-wrap gap-2 border-b border-slate-100 pb-3">
+      <a href="/borrowings<%= filters.q ? '?q=' + encodeURIComponent(filters.q) : '' %>" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors <%= !filters.status ? 'bg-blue-600 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' %>">
+        Semua Status
+      </a>
+      <a href="/borrowings?status=PENDING<%= filters.q ? '&q=' + encodeURIComponent(filters.q) : '' %>" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors <%= filters.status === 'PENDING' ? 'bg-amber-500 text-white shadow-xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100' %>">
+        <i class="fa-solid fa-hourglass-start mr-1"></i> Menunggu Persetujuan (Pending)
+      </a>
+      <a href="/borrowings?status=APPROVED<%= filters.q ? '&q=' + encodeURIComponent(filters.q) : '' %>" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors <%= filters.status === 'APPROVED' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 hover:bg-blue-100' %>">
+        <i class="fa-solid fa-hand-holding mr-1"></i> Sedang Dipinjam (Approved)
+      </a>
+      <a href="/borrowings?status=RETURNED<%= filters.q ? '&q=' + encodeURIComponent(filters.q) : '' %>" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors <%= filters.status === 'RETURNED' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' %>">
+        <i class="fa-solid fa-circle-check mr-1"></i> Selesai Dikembalikan (Returned)
+      </a>
+      <a href="/borrowings?status=REJECTED<%= filters.q ? '&q=' + encodeURIComponent(filters.q) : '' %>" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-colors <%= filters.status === 'REJECTED' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-50 text-rose-700 hover:bg-rose-100' %>">
+        <i class="fa-solid fa-circle-xmark mr-1"></i> Ditolak (Rejected)
+      </a>
+    </div>
+
+    <!-- Search Form -->
+    <form action="/borrowings" method="GET" class="flex items-center gap-3">
+      <% if (filters.status) { %>
+        <input type="hidden" name="status" value="<%= filters.status %>">
+      <% } %>
+      <div class="relative flex-1">
+        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+        </span>
+        <input type="text" name="q" value="<%= filters.q %>" placeholder="Cari nama alat, peminjam, atau NISN..." class="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all">
+      </div>
+      <button type="submit" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-semibold transition-colors">
+        Cari
+      </button>
+      <% if (filters.q || filters.status) { %>
+        <a href="/borrowings" class="px-3 py-2 text-xs text-slate-500 hover:text-slate-800 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+          Reset
+        </a>
+      <% } %>
+    </form>
+  </div>
+
+  <!-- Circulation Table -->
+  <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 font-semibold uppercase tracking-wider">
+            <th class="py-3.5 px-4">ID Transaksi</th>
+            <th class="py-3.5 px-4">Peminjam</th>
+            <th class="py-3.5 px-4">Alat Praktikum</th>
+            <th class="py-3.5 px-4">Jumlah</th>
+            <th class="py-3.5 px-4">Tgl Pinjam & Rencana</th>
+            <th class="py-3.5 px-4">Status</th>
+            <th class="py-3.5 px-4">Kondisi & Denda</th>
+            <th class="py-3.5 px-4 text-center">Tindakan</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <% if (borrowings && borrowings.length > 0) { %>
+            <% borrowings.forEach(item => { %>
+              <% const isOverdue = item.status === 'APPROVED' && new Date() > new Date(item.tglKembaliRencana); %>
+              <tr class="hover:bg-slate-50/80 transition-colors <%= isOverdue ? 'bg-rose-50/30' : '' %>">
+                
+                <!-- ID Transaksi -->
+                <td class="py-3.5 px-4 font-mono font-bold text-slate-500">
+                  #TRX-<%= String(item.id).padStart(4, '0') %>
+                </td>
+
+                <!-- Peminjam -->
+                <td class="py-3.5 px-4">
+                  <p class="font-bold text-slate-900"><%= item.user.nama %></p>
+                  <p class="text-[11px] text-slate-400 font-mono">
+                    <%= item.user.nisn ? 'NISN: ' + item.user.nisn : item.user.role %>
+                  </p>
+                </td>
+
+                <!-- Alat & Kategori -->
+                <td class="py-3.5 px-4">
+                  <p class="font-bold text-slate-800"><%= item.tool.namaAlat %></p>
+                  <span class="text-[10px] text-blue-600 bg-blue-50 px-1.5 py-0.2 rounded font-semibold">
+                    <%= item.tool.category.namaKategori %>
+                  </span>
+                </td>
+
+                <!-- Jumlah -->
+                <td class="py-3.5 px-4 font-extrabold text-slate-800">
+                  <%= item.jumlah %> Unit
+                </td>
+
+                <!-- Tanggal -->
+                <td class="py-3.5 px-4 text-slate-600">
+                  <div>
+                    <span class="text-slate-400 text-[10px] block">Pinjam:</span>
+                    <span><%= formatDate(item.tglPinjam) %></span>
+                  </div>
+                  <div class="mt-1">
+                    <span class="text-slate-400 text-[10px] block">Batas:</span>
+                    <% if (isOverdue) { %>
+                      <span class="text-rose-600 font-bold"><%= formatDate(item.tglKembaliRencana) %> (Terlambat!)</span>
+                    <% } else { %>
+                      <span><%= formatDate(item.tglKembaliRencana) %></span>
+                    <% } %>
+                  </div>
+                </td>
+
+                <!-- Status Badge -->
+                <td class="py-3.5 px-4">
+                  <% if (item.status === 'PENDING') { %>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Menunggu
+                    </span>
+                  <% } else if (item.status === 'APPROVED') { %>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800">
+                      <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Dipinjam
+                    </span>
+                  <% } else if (item.status === 'RETURNED') { %>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Selesai
+                    </span>
+                  <% } else { %>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-100 text-rose-800">
+                      <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Ditolak
+                    </span>
+                  <% } %>
+                </td>
+
+                <!-- Kondisi & Denda -->
+                <td class="py-3.5 px-4">
+                  <% if (item.status === 'RETURNED') { %>
+                    <div>
+                      <% if (item.kondisiKembali === 'BAIK') { %>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <i class="fa-solid fa-check"></i> BAIK
+                        </span>
+                      <% } else if (item.kondisiKembali === 'RUSAK') { %>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                          <i class="fa-solid fa-triangle-exclamation"></i> RUSAK
+                        </span>
+                      <% } else { %>
+                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                          HILANG
+                        </span>
+                      <% } %>
+
+                      <% if (item.denda > 0) { %>
+                        <p class="font-bold text-rose-600 mt-1"><%= formatRupiah(item.denda) %></p>
+                      <% } else { %>
+                        <p class="text-slate-400 text-[10px] mt-0.5">Denda: Rp 0</p>
+                      <% } %>
+                    </div>
+                  <% } else { %>
+                    <span class="text-slate-400 italic">-</span>
+                  <% } %>
+                </td>
+
+                <!-- Actions -->
+                <td class="py-3.5 px-4 text-center">
+                  <div class="flex items-center justify-center gap-1.5">
+                    
+                    <!-- 1. Toolman / Admin APPROVAL ACTIONS for PENDING -->
+                    <% if ((currentUser.role === 'TOOLMAN' || currentUser.role === 'ADMIN') && item.status === 'PENDING') { %>
+                      <form action="/borrowings/<%= item.id %>/approve" method="POST" onsubmit="return confirm('Setujui peminjaman ini?')">
+                        <button type="submit" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1" title="Setujui Pinjaman">
+                          <i class="fa-solid fa-check text-[11px]"></i>
+                          <span>Setujui</span>
+                        </button>
+                      </form>
+
+                      <form action="/borrowings/<%= item.id %>/reject" method="POST" onsubmit="return confirm('Tolak permohonan pinjam ini?')">
+                        <input type="hidden" name="alasan" value="Stok alat terbatas / permohonan ditolak">
+                        <button type="submit" class="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1" title="Tolak Pinjaman">
+                          <i class="fa-solid fa-xmark text-[11px]"></i>
+                          <span>Tolak</span>
+                        </button>
+                      </form>
+                    <% } %>
+
+                    <!-- 2. Toolman / Admin RETURN INSPECTION for APPROVED -->
+                    <% if ((currentUser.role === 'TOOLMAN' || currentUser.role === 'ADMIN') && item.status === 'APPROVED') { %>
+                      <a href="/borrowings/<%= item.id %>/return" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1" title="Inspeksi Pengembalian & Denda">
+                        <i class="fa-solid fa-clipboard-check text-[11px]"></i>
+                        <span>Cek Fisik & Kembali</span>
+                      </a>
+                    <% } %>
+
+                    <!-- 3. Peminjam Action: Return to Toolman Desk -->
+                    <% if (currentUser.role === 'PEMINJAM' && item.status === 'APPROVED') { %>
+                      <form action="/borrowings/<%= item.id %>/return-request" method="POST" onsubmit="return confirm('Konfirmasi bahwa alat sudah diserahkan di meja pemeriksaan Toolman?')">
+                        <button type="submit" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow-2xs transition-colors flex items-center gap-1" title="Kembalikan ke Toolman">
+                          <i class="fa-solid fa-arrow-turn-down-left text-[11px]"></i>
+                          <span>Serahkan ke Meja Toolman</span>
+                        </button>
+                      </form>
+                    <% } %>
+
+                    <!-- 4. Admin Action: Delete Record -->
+                    <% if (currentUser.role === 'ADMIN') { %>
+                      <form action="/borrowings/<%= item.id %>/delete" method="POST" onsubmit="return confirm('Hapus data transaksi ini?')">
+                        <button type="submit" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus Riwayat">
+                          <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                      </form>
+                    <% } %>
+
+                  </div>
+                </td>
+
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr>
+              <td colspan="8" class="py-10 text-center text-slate-400">
+                <i class="fa-solid fa-inbox text-3xl mb-2 block text-slate-300"></i>
+                Tidak ada data peminjaman yang sesuai dengan filter.
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/footer') %>

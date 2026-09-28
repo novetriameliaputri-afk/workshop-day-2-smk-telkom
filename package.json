@@ -1,7 +1,7 @@
 {
-  "name": "website-sewa-kebayajas",
+  "name": "sistem-peminjaman-sarpras-lab-rpl",
   "version": "1.0.0",
-  "description": "Sistem Informasi Manajemen Persewaan Busana (Kebaya & Jas) SEWA AJA - Workshop PjBL SMK Telkom Lampung Hari Ke-2",
+  "description": "Sistem Peminjaman Sarpras Lab RPL & Elektronika SMK Telkom - Standar UKK & Industri (Node.js, Express, Prisma, SQLite, EJS, Tailwind CSS)",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
-    "seed": "node prisma/seed.js"
+    "seed": "node prisma/seed.js",
+    "test": "node test-scenarios.js"
   },
   "keywords": [
     "nodejs",
@@ -24,12 +25,19 @@
   "license": "MIT",
   "dependencies": {
     "@prisma/client": "^6.4.1",
+    "bcryptjs": "^3.0.3",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
-    "express": "^4.21.2"
+    "express": "^4.21.2",
+    "express-session": "^1.19.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",
     "prisma": "^6.4.1"
+  },
+  "allowScripts": {
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "prisma@6.19.3": true
   }
 }
